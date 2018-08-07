@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Training &mdash; OpenNMT-tf 1.6.0 documentation</title>
+  <title>Training &mdash; OpenNMT-tf 1.7.0 documentation</title>
   
 
   
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                1.6
+                1.7
               </div>
             
           
@@ -210,6 +210,7 @@
 </div>
 <p>will start the worker 1 on the current machine and first GPU. By setting <code class="docutils literal"><span class="pre">CUDA_VISIBLE_DEVICES</span></code> correctly, asynchronous distributed training can be run on a single multi-GPU machine.</p>
 <p>For more details, see the documentation of <a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/estimator/train_and_evaluate"><code class="docutils literal"><span class="pre">tf.estimator.train_and_evaluate</span></code></a>. Also see <a class="reference external" href="https://github.com/tensorflow/ecosystem">tensorflow/ecosystem</a> to integrate distributed training with open-source frameworks like Docker or Kubernetes.</p>
+<p><strong>Note:</strong> distributed training will also split the training directory <code class="docutils literal"><span class="pre">model_dir</span></code> accross the instances. This could impact features that restore checkpoints like inference, manual export, or checkpoint averaging. The recommend approach to properly support these features while running distributed training is to store the <code class="docutils literal"><span class="pre">model_dir</span></code> on a shared filesystem, e.g. by using <a class="reference external" href="https://www.tensorflow.org/deploy/hadoop">HDFS</a>.</p>
 </div>
 </div>
 
@@ -249,12 +250,13 @@
 <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
         <span class="fa fa-book"> Other Versions</span>
-        v: v1.6.0
+        v: v1.7.0
         <span class="fa fa-caret-down"></span>
     </span>
     <div class="rst-other-versions">
         <dl>
             <dt>Tags</dt>
+            <dd><a href="v1.7.0/training.html">v1.7.0</a></dd>
             <dd><a href="v1.6.0/training.html">v1.6.0</a></dd>
             <dd><a href="v1.5.0/training.html">v1.5.0</a></dd>
             <dd><a href="v1.4.0/training.html">v1.4.0</a></dd>
@@ -272,7 +274,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.6.0',
+            VERSION:'1.7.0',
             LANGUAGE:'en',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',

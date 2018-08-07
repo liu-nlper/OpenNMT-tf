@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Data &mdash; OpenNMT-tf 1.6.0 documentation</title>
+  <title>Data &mdash; OpenNMT-tf 1.7.0 documentation</title>
   
 
   
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                1.6
+                1.7
               </div>
             
           
@@ -94,6 +94,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#vectors">Vectors</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#data-location">Data location</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#parallel-inputs">Parallel inputs</a></li>
 </ul>
 </li>
@@ -200,6 +201,20 @@ FEATm.1 FEATm.2 FEATm.3 ... FEATm.n ]
 <p>See <code class="docutils literal"><span class="pre">onmt-ark-to-records</span> <span class="pre">-h</span></code> for the script usage. It also accepts an optional indexed text file (i.e. with lines prefixed with <code class="docutils literal"><span class="pre">KEY</span></code>s) to generate aligned source vectors and target texts.</p>
 </div>
 </div>
+<div class="section" id="data-location">
+<span id="data-location"></span><h2>Data location<a class="headerlink" href="#data-location" title="Permalink to this headline">¶</a></h2>
+<p>By default, the data are expected to be on the same filesystem. However, it is possible to reference data stored in HDFS, Amazon S3, or any other remote storages supported by TensorFlow. For example:</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">data</span><span class="p p-Indicator">:</span>
+  <span class="l l-Scalar l-Scalar-Plain">train_features_file</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">s3://namebucket/toy-ende/src-train.txt</span>
+  <span class="l l-Scalar l-Scalar-Plain">train_labels_file</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">hdfs://namenode:8020/toy-ende/tgt-train.txt</span>
+</pre></div>
+</div>
+<p>For more information, see the TensorFlow documentation:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://www.tensorflow.org/deploy/hadoop">How to run TensorFlow on Hadoop</a></li>
+<li><a class="reference external" href="https://www.tensorflow.org/deploy/s3">How to run TensorFlow on S3</a></li>
+</ul>
+</div>
 <div class="section" id="parallel-inputs">
 <span id="parallel-inputs"></span><h2>Parallel inputs<a class="headerlink" href="#parallel-inputs" title="Permalink to this headline">¶</a></h2>
 <p>When using <code class="docutils literal"><span class="pre">opennmt.inputters.ParallelInputter</span></code>, as many input files as inputters are expected. You have to configure your YAML file accordingly:</p>
@@ -254,12 +269,13 @@ FEATm.1 FEATm.2 FEATm.3 ... FEATm.n ]
 <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
         <span class="fa fa-book"> Other Versions</span>
-        v: v1.6.0
+        v: v1.7.0
         <span class="fa fa-caret-down"></span>
     </span>
     <div class="rst-other-versions">
         <dl>
             <dt>Tags</dt>
+            <dd><a href="v1.7.0/data.html">v1.7.0</a></dd>
             <dd><a href="v1.6.0/data.html">v1.6.0</a></dd>
             <dd><a href="v1.5.0/data.html">v1.5.0</a></dd>
             <dd><a href="v1.4.0/data.html">v1.4.0</a></dd>
@@ -277,7 +293,7 @@ FEATm.1 FEATm.2 FEATm.3 ... FEATm.n ]
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.6.0',
+            VERSION:'1.7.0',
             LANGUAGE:'en',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>opennmt.utils.misc &mdash; OpenNMT-tf 1.6.0 documentation</title>
+  <title>opennmt.utils.misc &mdash; OpenNMT-tf 1.7.0 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                1.6
+                1.7
               </div>
             
           
@@ -211,7 +211,7 @@
 
 <div class="viewcode-block" id="count_lines"><a class="viewcode-back" href="../../../package/opennmt.utils.misc.html#opennmt.utils.misc.count_lines">[docs]</a><span class="k">def</span> <span class="nf">count_lines</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
   <span class="sd">&quot;&quot;&quot;Returns the number of lines of the file :obj:`filename`.&quot;&quot;&quot;</span>
-  <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+  <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">gfile</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
     <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
       <span class="k">pass</span>
@@ -326,13 +326,14 @@
 <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
         <span class="fa fa-book"> Other Versions</span>
-        v: v1.6.0
+        v: v1.7.0
         <span class="fa fa-caret-down"></span>
     </span>
     <div class="rst-other-versions">
         <dl>
             <dt>Tags</dt>
-            <dd><a href="../../../v1.6.0/_modules/opennmt/utils/misc.html">v1.6.0</a></dd>
+            <dd><a href="../../../v1.7.0/_modules/opennmt/utils/misc.html">v1.7.0</a></dd>
+            <dd><a href="../../../v1.6.0/index.html">v1.6.0</a></dd>
             <dd><a href="../../../v1.5.0/index.html">v1.5.0</a></dd>
             <dd><a href="../../../v1.4.0/index.html">v1.4.0</a></dd>
             <dd><a href="../../../v1.3.0/index.html">v1.3.0</a></dd>
@@ -349,7 +350,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'1.6.0',
+            VERSION:'1.7.0',
             LANGUAGE:'en',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',

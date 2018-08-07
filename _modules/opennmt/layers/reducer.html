@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>opennmt.layers.reducer &mdash; OpenNMT-tf 1.6.0 documentation</title>
+  <title>opennmt.layers.reducer &mdash; OpenNMT-tf 1.7.0 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                1.6
+                1.7
               </div>
             
           
@@ -313,7 +313,7 @@
   <span class="sd">&quot;&quot;&quot;A reducer that multiplies the inputs.&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="MultiplyReducer.reduce"><a class="viewcode-back" href="../../../package/opennmt.layers.reducer.html#opennmt.layers.reducer.MultiplyReducer.reduce">[docs]</a>  <span class="k">def</span> <span class="nf">reduce</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">foldl</span><span class="p">(</span><span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">a</span> <span class="o">*</span> <span class="n">x</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">foldl</span><span class="p">(</span><span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">a</span> <span class="o">*</span> <span class="n">x</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">inputs</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="MultiplyReducer.reduce_sequence"><a class="viewcode-back" href="../../../package/opennmt.layers.reducer.html#opennmt.layers.reducer.MultiplyReducer.reduce_sequence">[docs]</a>  <span class="k">def</span> <span class="nf">reduce_sequence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">sequence_lengths</span><span class="p">):</span>
     <span class="n">padded</span><span class="p">,</span> <span class="n">combined_length</span> <span class="o">=</span> <span class="n">pad_n_with_identity</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">sequence_lengths</span><span class="p">,</span> <span class="n">identity_values</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
@@ -404,13 +404,14 @@
 <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
         <span class="fa fa-book"> Other Versions</span>
-        v: v1.6.0
+        v: v1.7.0
         <span class="fa fa-caret-down"></span>
     </span>
     <div class="rst-other-versions">
         <dl>
             <dt>Tags</dt>
-            <dd><a href="../../../v1.6.0/_modules/opennmt/layers/reducer.html">v1.6.0</a></dd>
+            <dd><a href="../../../v1.7.0/_modules/opennmt/layers/reducer.html">v1.7.0</a></dd>
+            <dd><a href="../../../v1.6.0/index.html">v1.6.0</a></dd>
             <dd><a href="../../../v1.5.0/index.html">v1.5.0</a></dd>
             <dd><a href="../../../v1.4.0/index.html">v1.4.0</a></dd>
             <dd><a href="../../../v1.3.0/index.html">v1.3.0</a></dd>
@@ -427,7 +428,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'1.6.0',
+            VERSION:'1.7.0',
             LANGUAGE:'en',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',

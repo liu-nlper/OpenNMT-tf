@@ -210,13 +210,37 @@ to reflect the added token on both sequences.</p>
 </dd></dl>
 
 <dl class="class">
+<dt id="opennmt.models.sequence_to_sequence.EmbeddingsSharingLevel">
+<em class="property">class </em><code class="descclassname">opennmt.models.sequence_to_sequence.</code><code class="descname">EmbeddingsSharingLevel</code><a class="reference internal" href="../_modules/opennmt/models/sequence_to_sequence.html#EmbeddingsSharingLevel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opennmt.models.sequence_to_sequence.EmbeddingsSharingLevel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Level of embeddings sharing.</p>
+<p>Possible values are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal"><span class="pre">NONE</span></code>: no sharing (default)</li>
+<li><code class="docutils literal"><span class="pre">SOURCE_TARGET_INPUT</span></code>: share source and target word embeddings</li>
+</ul>
+</div></blockquote>
+<dl class="attribute">
+<dt id="opennmt.models.sequence_to_sequence.EmbeddingsSharingLevel.NONE">
+<code class="descname">NONE</code><em class="property"> = 0</em><a class="headerlink" href="#opennmt.models.sequence_to_sequence.EmbeddingsSharingLevel.NONE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="opennmt.models.sequence_to_sequence.EmbeddingsSharingLevel.SOURCE_TARGET_INPUT">
+<code class="descname">SOURCE_TARGET_INPUT</code><em class="property"> = 1</em><a class="headerlink" href="#opennmt.models.sequence_to_sequence.EmbeddingsSharingLevel.SOURCE_TARGET_INPUT" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="opennmt.models.sequence_to_sequence.SequenceToSequence">
-<em class="property">class </em><code class="descclassname">opennmt.models.sequence_to_sequence.</code><code class="descname">SequenceToSequence</code><span class="sig-paren">(</span><em>source_inputter</em>, <em>target_inputter</em>, <em>encoder</em>, <em>decoder</em>, <em>daisy_chain_variables=False</em>, <em>name='seq2seq'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opennmt/models/sequence_to_sequence.html#SequenceToSequence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opennmt.models.sequence_to_sequence.SequenceToSequence" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">opennmt.models.sequence_to_sequence.</code><code class="descname">SequenceToSequence</code><span class="sig-paren">(</span><em>source_inputter</em>, <em>target_inputter</em>, <em>encoder</em>, <em>decoder</em>, <em>share_embeddings=0</em>, <em>daisy_chain_variables=False</em>, <em>name='seq2seq'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opennmt/models/sequence_to_sequence.html#SequenceToSequence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opennmt.models.sequence_to_sequence.SequenceToSequence" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="opennmt.models.model.html#opennmt.models.model.Model" title="opennmt.models.model.Model"><code class="xref py py-class docutils literal"><span class="pre">opennmt.models.model.Model</span></code></a></p>
 <p>A sequence to sequence model.</p>
 <dl class="method">
 <dt id="opennmt.models.sequence_to_sequence.SequenceToSequence.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>source_inputter</em>, <em>target_inputter</em>, <em>encoder</em>, <em>decoder</em>, <em>daisy_chain_variables=False</em>, <em>name='seq2seq'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opennmt/models/sequence_to_sequence.html#SequenceToSequence.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opennmt.models.sequence_to_sequence.SequenceToSequence.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>source_inputter</em>, <em>target_inputter</em>, <em>encoder</em>, <em>decoder</em>, <em>share_embeddings=0</em>, <em>daisy_chain_variables=False</em>, <em>name='seq2seq'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opennmt/models/sequence_to_sequence.html#SequenceToSequence.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opennmt.models.sequence_to_sequence.SequenceToSequence.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initializes a sequence-to-sequence model.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -230,6 +254,9 @@ the target data. Currently, only the
 <a class="reference internal" href="opennmt.inputters.text_inputter.html#opennmt.inputters.text_inputter.WordEmbedder" title="opennmt.inputters.text_inputter.WordEmbedder"><code class="xref py py-class docutils literal"><span class="pre">opennmt.inputters.text_inputter.WordEmbedder</span></code></a> is supported.</li>
 <li><strong>encoder</strong> – A <a class="reference internal" href="opennmt.encoders.encoder.html#opennmt.encoders.encoder.Encoder" title="opennmt.encoders.encoder.Encoder"><code class="xref py py-class docutils literal"><span class="pre">opennmt.encoders.encoder.Encoder</span></code></a> to encode the source.</li>
 <li><strong>decoder</strong> – A <a class="reference internal" href="opennmt.decoders.decoder.html#opennmt.decoders.decoder.Decoder" title="opennmt.decoders.decoder.Decoder"><code class="xref py py-class docutils literal"><span class="pre">opennmt.decoders.decoder.Decoder</span></code></a> to decode the target.</li>
+<li><strong>share_embeddings</strong> – Level of embeddings sharing, see
+<a class="reference internal" href="#opennmt.models.sequence_to_sequence.EmbeddingsSharingLevel" title="opennmt.models.sequence_to_sequence.EmbeddingsSharingLevel"><code class="xref py py-class docutils literal"><span class="pre">opennmt.models.sequence_to_sequence.EmbeddingsSharingLevel</span></code></a>
+for possible values.</li>
 <li><strong>daisy_chain_variables</strong> – If <code class="docutils literal"><span class="pre">True</span></code>, copy variables in a daisy chain
 between devices for this model. Not compatible with RNN based models.</li>
 <li><strong>name</strong> – The name of this model.</li>
@@ -237,7 +264,8 @@ between devices for this model. Not compatible with RNN based models.</li>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal"><span class="pre">TypeError</span></code> – if <code class="xref py py-obj docutils literal"><span class="pre">target_inputter</span></code> is not a
-<a class="reference internal" href="opennmt.inputters.text_inputter.html#opennmt.inputters.text_inputter.WordEmbedder" title="opennmt.inputters.text_inputter.WordEmbedder"><code class="xref py py-class docutils literal"><span class="pre">opennmt.inputters.text_inputter.WordEmbedder</span></code></a> or if
+<a class="reference internal" href="opennmt.inputters.text_inputter.html#opennmt.inputters.text_inputter.WordEmbedder" title="opennmt.inputters.text_inputter.WordEmbedder"><code class="xref py py-class docutils literal"><span class="pre">opennmt.inputters.text_inputter.WordEmbedder</span></code></a> (same for
+<code class="xref py py-obj docutils literal"><span class="pre">source_inputter</span></code> when embeddings sharing is enabled) or if
 <code class="xref py py-obj docutils literal"><span class="pre">source_inputter</span></code> and <code class="xref py py-obj docutils literal"><span class="pre">target_inputter</span></code> do not have the same
 <code class="docutils literal"><span class="pre">dtype</span></code>.</p>
 </td>
@@ -345,6 +373,7 @@ token.</p>
     <div class="rst-other-versions">
         <dl>
             <dt>Tags</dt>
+            <dd><a href="../../v1.7.0/package/opennmt.models.sequence_to_sequence.html">v1.7.0</a></dd>
             <dd><a href="../../v1.6.0/package/opennmt.models.sequence_to_sequence.html">v1.6.0</a></dd>
             <dd><a href="../../v1.5.0/package/opennmt.models.sequence_to_sequence.html">v1.5.0</a></dd>
             <dd><a href="opennmt.models.sequence_to_sequence.html">v1.4.0</a></dd>
