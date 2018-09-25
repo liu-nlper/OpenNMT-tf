@@ -235,12 +235,12 @@ to reflect the added token on both sequences.</p>
 
 <dl class="class">
 <dt id="opennmt.models.sequence_to_sequence.SequenceToSequence">
-<em class="property">class </em><code class="descclassname">opennmt.models.sequence_to_sequence.</code><code class="descname">SequenceToSequence</code><span class="sig-paren">(</span><em>source_inputter</em>, <em>target_inputter</em>, <em>encoder</em>, <em>decoder</em>, <em>share_embeddings=0</em>, <em>daisy_chain_variables=False</em>, <em>name='seq2seq'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opennmt/models/sequence_to_sequence.html#SequenceToSequence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opennmt.models.sequence_to_sequence.SequenceToSequence" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">opennmt.models.sequence_to_sequence.</code><code class="descname">SequenceToSequence</code><span class="sig-paren">(</span><em>source_inputter</em>, <em>target_inputter</em>, <em>encoder</em>, <em>decoder</em>, <em>share_embeddings=0</em>, <em>alignment_file_key='train_alignments'</em>, <em>daisy_chain_variables=False</em>, <em>name='seq2seq'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opennmt/models/sequence_to_sequence.html#SequenceToSequence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opennmt.models.sequence_to_sequence.SequenceToSequence" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="opennmt.models.model.html#opennmt.models.model.Model" title="opennmt.models.model.Model"><code class="xref py py-class docutils literal"><span class="pre">opennmt.models.model.Model</span></code></a></p>
 <p>A sequence to sequence model.</p>
 <dl class="method">
 <dt id="opennmt.models.sequence_to_sequence.SequenceToSequence.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>source_inputter</em>, <em>target_inputter</em>, <em>encoder</em>, <em>decoder</em>, <em>share_embeddings=0</em>, <em>daisy_chain_variables=False</em>, <em>name='seq2seq'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opennmt/models/sequence_to_sequence.html#SequenceToSequence.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opennmt.models.sequence_to_sequence.SequenceToSequence.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>source_inputter</em>, <em>target_inputter</em>, <em>encoder</em>, <em>decoder</em>, <em>share_embeddings=0</em>, <em>alignment_file_key='train_alignments'</em>, <em>daisy_chain_variables=False</em>, <em>name='seq2seq'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opennmt/models/sequence_to_sequence.html#SequenceToSequence.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opennmt.models.sequence_to_sequence.SequenceToSequence.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initializes a sequence-to-sequence model.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -257,6 +257,8 @@ the target data. Currently, only the
 <li><strong>share_embeddings</strong> – Level of embeddings sharing, see
 <a class="reference internal" href="#opennmt.models.sequence_to_sequence.EmbeddingsSharingLevel" title="opennmt.models.sequence_to_sequence.EmbeddingsSharingLevel"><code class="xref py py-class docutils literal"><span class="pre">opennmt.models.sequence_to_sequence.EmbeddingsSharingLevel</span></code></a>
 for possible values.</li>
+<li><strong>alignment_file_key</strong> – The data configuration key of the training alignment
+file to support guided alignment.</li>
 <li><strong>daisy_chain_variables</strong> – If <code class="docutils literal"><span class="pre">True</span></code>, copy variables in a daisy chain
 between devices for this model. Not compatible with RNN based models.</li>
 <li><strong>name</strong> – The name of this model.</li>
@@ -279,6 +281,59 @@ between devices for this model. Not compatible with RNN based models.</li>
 <code class="descname">print_prediction</code><span class="sig-paren">(</span><em>prediction</em>, <em>params=None</em>, <em>stream=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opennmt/models/sequence_to_sequence.html#SequenceToSequence.print_prediction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opennmt.models.sequence_to_sequence.SequenceToSequence.print_prediction" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+</dd></dl>
+
+<dl class="function">
+<dt id="opennmt.models.sequence_to_sequence.alignment_matrix_from_pharaoh">
+<code class="descclassname">opennmt.models.sequence_to_sequence.</code><code class="descname">alignment_matrix_from_pharaoh</code><span class="sig-paren">(</span><em>alignment_line</em>, <em>source_length</em>, <em>target_length</em>, <em>dtype=tf.float32</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opennmt/models/sequence_to_sequence.html#alignment_matrix_from_pharaoh"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opennmt.models.sequence_to_sequence.alignment_matrix_from_pharaoh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse Pharaoh alignments into an alignment matrix.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>alignment_line</strong> – A string <code class="docutils literal"><span class="pre">tf.Tensor</span></code> in the Pharaoh format.</li>
+<li><strong>source_length</strong> – The length of the source sentence.</li>
+<li><strong>The length of the target sentence.</strong> (<em>target_length</em>) – </li>
+<li><strong>dtype</strong> – The output matrix dtype. Defaults to <code class="docutils literal"><span class="pre">tf.float32</span></code> for convenience
+when computing the guided alignment loss.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The alignment matrix as a 2-D <code class="docutils literal"><span class="pre">tf.Tensor</span></code> of type <code class="xref py py-obj docutils literal"><span class="pre">dtype</span></code> and shape
+<code class="docutils literal"><span class="pre">[target_length,</span> <span class="pre">source_length]</span></code>, where <code class="docutils literal"><span class="pre">[i,</span> <span class="pre">j]</span> <span class="pre">=</span> <span class="pre">1</span></code> if the <code class="docutils literal"><span class="pre">i</span></code> th
+target word is aligned with the <code class="docutils literal"><span class="pre">j</span></code> th source word.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="opennmt.models.sequence_to_sequence.guided_alignment_cost">
+<code class="descclassname">opennmt.models.sequence_to_sequence.</code><code class="descname">guided_alignment_cost</code><span class="sig-paren">(</span><em>attention_probs</em>, <em>gold_alignment</em>, <em>sequence_length</em>, <em>guided_alignment_type</em>, <em>guided_alignment_weight=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opennmt/models/sequence_to_sequence.html#guided_alignment_cost"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opennmt.models.sequence_to_sequence.guided_alignment_cost" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the guided alignment cost.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>attention_probs</strong> – The attention probabilities, a float <code class="docutils literal"><span class="pre">tf.Tensor</span></code> of shape
+<span class="math">\([B, T_t, T_s]\)</span>.</li>
+<li><strong>gold_alignment</strong> – The true alignment matrix, a float <code class="docutils literal"><span class="pre">tf.Tensor</span></code> of shape
+<span class="math">\([B, T_t, T_s]\)</span>.</li>
+<li><strong>sequence_length</strong> – The length of each sequence.</li>
+<li><strong>guided_alignment_type</strong> – The type of guided alignment cost function to compute
+(can be: ce, mse).</li>
+<li><strong>guided_alignment_weight</strong> – The weight applied to the guided alignment cost.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The guided alignment cost.</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -373,6 +428,7 @@ token.</p>
     <div class="rst-other-versions">
         <dl>
             <dt>Tags</dt>
+            <dd><a href="../../v1.8.0/package/opennmt.models.sequence_to_sequence.html">v1.8.0</a></dd>
             <dd><a href="../../v1.7.0/package/opennmt.models.sequence_to_sequence.html">v1.7.0</a></dd>
             <dd><a href="../../v1.6.0/package/opennmt.models.sequence_to_sequence.html">v1.6.0</a></dd>
             <dd><a href="../../v1.5.0/package/opennmt.models.sequence_to_sequence.html">v1.5.0</a></dd>

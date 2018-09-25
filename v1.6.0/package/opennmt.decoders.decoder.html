@@ -283,7 +283,7 @@ is not set.</li>
 <p>Base class for decoders.</p>
 <dl class="method">
 <dt id="opennmt.decoders.decoder.Decoder.decode">
-<code class="descname">decode</code><span class="sig-paren">(</span><em>inputs</em>, <em>sequence_length</em>, <em>vocab_size=None</em>, <em>initial_state=None</em>, <em>sampling_probability=None</em>, <em>embedding=None</em>, <em>output_layer=None</em>, <em>mode='train'</em>, <em>memory=None</em>, <em>memory_sequence_length=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opennmt/decoders/decoder.html#Decoder.decode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opennmt.decoders.decoder.Decoder.decode" title="Permalink to this definition">¶</a></dt>
+<code class="descname">decode</code><span class="sig-paren">(</span><em>inputs</em>, <em>sequence_length</em>, <em>vocab_size=None</em>, <em>initial_state=None</em>, <em>sampling_probability=None</em>, <em>embedding=None</em>, <em>output_layer=None</em>, <em>mode='train'</em>, <em>memory=None</em>, <em>memory_sequence_length=None</em>, <em>return_alignment_history=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opennmt/decoders/decoder.html#Decoder.decode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opennmt.decoders.decoder.Decoder.decode" title="Permalink to this definition">¶</a></dt>
 <dd><p>Decodes a full input sequence.</p>
 <p>Usually used for training and evaluation where target sequences are known.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -305,10 +305,15 @@ Must be set if <code class="xref py py-obj docutils literal"><span class="pre">v
 <li><strong>mode</strong> – A <code class="docutils literal"><span class="pre">tf.estimator.ModeKeys</span></code> mode.</li>
 <li><strong>memory</strong> – (optional) Memory values to query.</li>
 <li><strong>memory_sequence_length</strong> – (optional) Memory values length.</li>
+<li><strong>return_alignment_history</strong> – If <code class="docutils literal"><span class="pre">True</span></code>, also returns the alignment
+history from the attention layer (<code class="docutils literal"><span class="pre">None</span></code> will be returned if
+unsupported by the decoder).</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A tuple <code class="docutils literal"><span class="pre">(outputs,</span> <span class="pre">state,</span> <span class="pre">sequence_length)</span></code>.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A tuple <code class="docutils literal"><span class="pre">(outputs,</span> <span class="pre">state,</span> <span class="pre">sequence_length)</span></code> or
+<code class="docutils literal"><span class="pre">(outputs,</span> <span class="pre">state,</span> <span class="pre">sequence_length,</span> <span class="pre">alignment_history)</span></code>
+if <code class="xref py py-obj docutils literal"><span class="pre">return_alignment_history</span></code> is <code class="docutils literal"><span class="pre">True</span></code>.</p>
 </td>
 </tr>
 </tbody>
@@ -397,7 +402,7 @@ if <code class="xref py py-obj docutils literal"><span class="pre">return_alignm
 
 <dl class="function">
 <dt id="opennmt.decoders.decoder.greedy_decode">
-<code class="descclassname">opennmt.decoders.decoder.</code><code class="descname">greedy_decode</code><span class="sig-paren">(</span><em>symbols_to_logits_fn</em>, <em>initial_ids</em>, <em>end_id</em>, <em>decode_length=None</em>, <em>state=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opennmt/decoders/decoder.html#greedy_decode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opennmt.decoders.decoder.greedy_decode" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">opennmt.decoders.decoder.</code><code class="descname">greedy_decode</code><span class="sig-paren">(</span><em>symbols_to_logits_fn</em>, <em>initial_ids</em>, <em>end_id</em>, <em>decode_length=None</em>, <em>state=None</em>, <em>return_state=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opennmt/decoders/decoder.html#greedy_decode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opennmt.decoders.decoder.greedy_decode" title="Permalink to this definition">¶</a></dt>
 <dd><p>Greedily decodes from <code class="xref py py-obj docutils literal"><span class="pre">initial_ids</span></code>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -411,10 +416,12 @@ handed to symbols_to_logits_fn.</li>
 <li><strong>eos_id</strong> – ID for end of sentence.</li>
 <li><strong>decode_length</strong> – Maximum number of steps to decode for.</li>
 <li><strong>states</strong> – A dictionnary of (possibly nested) decoding states.</li>
+<li><strong>return_state</strong> – If <code class="docutils literal"><span class="pre">True</span></code>, also return the updated decoding states.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A tuple with the decoded output, the decoded lengths, and the log probabilities.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A tuple with the decoded output, the decoded lengths, the log probabilities,
+and the decoding states (if <code class="xref py py-obj docutils literal"><span class="pre">return_state</span></code> is <code class="docutils literal"><span class="pre">True</span></code>).</p>
 </td>
 </tr>
 </tbody>
@@ -465,6 +472,7 @@ handed to symbols_to_logits_fn.</li>
     <div class="rst-other-versions">
         <dl>
             <dt>Tags</dt>
+            <dd><a href="../../v1.8.0/package/opennmt.decoders.decoder.html">v1.8.0</a></dd>
             <dd><a href="../../v1.7.0/package/opennmt.decoders.decoder.html">v1.7.0</a></dd>
             <dd><a href="opennmt.decoders.decoder.html">v1.6.0</a></dd>
             <dd><a href="../../v1.5.0/package/opennmt.decoders.decoder.html">v1.5.0</a></dd>

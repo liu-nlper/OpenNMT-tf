@@ -286,7 +286,8 @@
              <span class="n">output_layer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
              <span class="n">mode</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">ModeKeys</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">,</span>
              <span class="n">memory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-             <span class="n">memory_sequence_length</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+             <span class="n">memory_sequence_length</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+             <span class="n">return_alignment_history</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Decodes a full input sequence.</span>
 
 <span class="sd">    Usually used for training and evaluation where target sequences are known.</span>
@@ -306,9 +307,14 @@
 <span class="sd">      mode: A ``tf.estimator.ModeKeys`` mode.</span>
 <span class="sd">      memory: (optional) Memory values to query.</span>
 <span class="sd">      memory_sequence_length: (optional) Memory values length.</span>
+<span class="sd">      return_alignment_history: If ``True``, also returns the alignment</span>
+<span class="sd">        history from the attention layer (``None`` will be returned if</span>
+<span class="sd">        unsupported by the decoder).</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">      A tuple ``(outputs, state, sequence_length)``.</span>
+<span class="sd">      A tuple ``(outputs, state, sequence_length)`` or</span>
+<span class="sd">      ``(outputs, state, sequence_length, alignment_history)``</span>
+<span class="sd">      if :obj:`return_alignment_history` is ``True``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
 
@@ -407,7 +413,8 @@
                   <span class="n">initial_ids</span><span class="p">,</span>
                   <span class="n">end_id</span><span class="p">,</span>
                   <span class="n">decode_length</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                  <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                  <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                  <span class="n">return_state</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
   <span class="sd">&quot;&quot;&quot;Greedily decodes from :obj:`initial_ids`.</span>
 
 <span class="sd">  Args:</span>
@@ -418,9 +425,11 @@
 <span class="sd">    eos_id: ID for end of sentence.</span>
 <span class="sd">    decode_length: Maximum number of steps to decode for.</span>
 <span class="sd">    states: A dictionnary of (possibly nested) decoding states.</span>
+<span class="sd">    return_state: If ``True``, also return the updated decoding states.</span>
 
 <span class="sd">  Returns:</span>
-<span class="sd">    A tuple with the decoded output, the decoded lengths, and the log probabilities.</span>
+<span class="sd">    A tuple with the decoded output, the decoded lengths, the log probabilities,</span>
+<span class="sd">    and the decoding states (if :obj:`return_state` is ``True``).</span>
 <span class="sd">  &quot;&quot;&quot;</span>
   <span class="n">batch_size</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">initial_ids</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
   <span class="n">finished</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">tile</span><span class="p">([</span><span class="kc">False</span><span class="p">],</span> <span class="p">[</span><span class="n">batch_size</span><span class="p">])</span>
@@ -457,7 +466,7 @@
 
     <span class="k">return</span> <span class="n">step</span><span class="p">,</span> <span class="n">next_finished</span><span class="p">,</span> <span class="n">next_inputs</span><span class="p">,</span> <span class="n">next_lengths</span><span class="p">,</span> <span class="n">log_probs</span><span class="p">,</span> <span class="n">state</span>
 
-  <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">lengths</span><span class="p">,</span> <span class="n">log_probs</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">while_loop</span><span class="p">(</span>
+  <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">lengths</span><span class="p">,</span> <span class="n">log_probs</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">while_loop</span><span class="p">(</span>
       <span class="n">_condition</span><span class="p">,</span>
       <span class="n">_body</span><span class="p">,</span>
       <span class="n">loop_vars</span><span class="o">=</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="n">finished</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">lengths</span><span class="p">,</span> <span class="n">log_probs</span><span class="p">,</span> <span class="n">state</span><span class="p">),</span>
@@ -470,6 +479,8 @@
           <span class="n">tf</span><span class="o">.</span><span class="n">contrib</span><span class="o">.</span><span class="n">framework</span><span class="o">.</span><span class="n">nest</span><span class="o">.</span><span class="n">map_structure</span><span class="p">(</span><span class="n">get_state_shape_invariants</span><span class="p">,</span> <span class="n">state</span><span class="p">)),</span>
       <span class="n">parallel_iterations</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
+  <span class="k">if</span> <span class="n">return_state</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">lengths</span><span class="p">,</span> <span class="n">log_probs</span><span class="p">,</span> <span class="n">state</span>
   <span class="k">return</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">lengths</span><span class="p">,</span> <span class="n">log_probs</span></div>
 </pre></div>
 
@@ -505,6 +516,7 @@
     <div class="rst-other-versions">
         <dl>
             <dt>Tags</dt>
+            <dd><a href="../../../../v1.8.0/index.html">v1.8.0</a></dd>
             <dd><a href="../../../../v1.7.0/index.html">v1.7.0</a></dd>
             <dd><a href="../../../../v1.6.0/index.html">v1.6.0</a></dd>
             <dd><a href="../../../../v1.5.0/index.html">v1.5.0</a></dd>

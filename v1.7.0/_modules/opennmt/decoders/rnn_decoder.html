@@ -244,7 +244,8 @@
              <span class="n">output_layer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
              <span class="n">mode</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">ModeKeys</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">,</span>
              <span class="n">memory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-             <span class="n">memory_sequence_length</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+             <span class="n">memory_sequence_length</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+             <span class="n">return_alignment_history</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="n">_</span> <span class="o">=</span> <span class="n">memory</span>
     <span class="n">_</span> <span class="o">=</span> <span class="n">memory_sequence_length</span>
 
@@ -273,7 +274,8 @@
         <span class="n">initial_state</span><span class="o">=</span><span class="n">initial_state</span><span class="p">,</span>
         <span class="n">memory</span><span class="o">=</span><span class="n">memory</span><span class="p">,</span>
         <span class="n">memory_sequence_length</span><span class="o">=</span><span class="n">memory_sequence_length</span><span class="p">,</span>
-        <span class="n">dtype</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+        <span class="n">alignment_history</span><span class="o">=</span><span class="n">return_alignment_history</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">output_layer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
       <span class="n">output_layer</span> <span class="o">=</span> <span class="n">build_output_layer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_units</span><span class="p">,</span> <span class="n">vocab_size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
@@ -294,6 +296,11 @@
     <span class="n">inputs_len</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">inputs</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">logits</span> <span class="o">=</span> <span class="n">align_in_time</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">inputs_len</span><span class="p">)</span>
 
+    <span class="k">if</span> <span class="n">return_alignment_history</span><span class="p">:</span>
+      <span class="n">alignment_history</span> <span class="o">=</span> <span class="n">_get_alignment_history</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">alignment_history</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">alignment_history</span> <span class="o">=</span> <span class="n">align_in_time</span><span class="p">(</span><span class="n">alignment_history</span><span class="p">,</span> <span class="n">inputs_len</span><span class="p">)</span>
+      <span class="k">return</span> <span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="n">alignment_history</span><span class="p">)</span>
     <span class="k">return</span> <span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">length</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="RNNDecoder.dynamic_decode"><a class="viewcode-back" href="../../../package/opennmt.decoders.rnn_decoder.html#opennmt.decoders.rnn_decoder.RNNDecoder.dynamic_decode">[docs]</a>  <span class="k">def</span> <span class="nf">dynamic_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
@@ -654,6 +661,7 @@
     <div class="rst-other-versions">
         <dl>
             <dt>Tags</dt>
+            <dd><a href="../../../../v1.8.0/index.html">v1.8.0</a></dd>
             <dd><a href="rnn_decoder.html">v1.7.0</a></dd>
             <dd><a href="../../../../v1.6.0/index.html">v1.6.0</a></dd>
             <dd><a href="../../../../v1.5.0/index.html">v1.5.0</a></dd>

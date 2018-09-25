@@ -389,7 +389,7 @@ the cumulative average.</li>
 
 <dl class="function">
 <dt id="opennmt.layers.transformer.multi_head_attention">
-<code class="descclassname">opennmt.layers.transformer.</code><code class="descname">multi_head_attention</code><span class="sig-paren">(</span><em>num_heads</em>, <em>queries</em>, <em>memory</em>, <em>mode</em>, <em>num_units=None</em>, <em>mask=None</em>, <em>cache=None</em>, <em>dropout=0.0</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opennmt/layers/transformer.html#multi_head_attention"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opennmt.layers.transformer.multi_head_attention" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">opennmt.layers.transformer.</code><code class="descname">multi_head_attention</code><span class="sig-paren">(</span><em>num_heads</em>, <em>queries</em>, <em>memory</em>, <em>mode</em>, <em>num_units=None</em>, <em>mask=None</em>, <em>cache=None</em>, <em>dropout=0.0</em>, <em>return_attention=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opennmt/layers/transformer.html#multi_head_attention"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opennmt.layers.transformer.multi_head_attention" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the multi-head attention as described in
 <a class="reference external" href="https://arxiv.org/abs/1706.03762">https://arxiv.org/abs/1706.03762</a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -407,10 +407,13 @@ dimension.</li>
 <li><strong>mask</strong> – A <code class="docutils literal"><span class="pre">tf.Tensor</span></code> applied to the dot product.</li>
 <li><strong>cache</strong> – A dictionary containing pre-projected keys and values.</li>
 <li><strong>dropout</strong> – The probability to drop units from the inputs.</li>
+<li><strong>return_attention</strong> – Return the attention head probabilities in addition to the
+context.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The concatenated attention context of each head.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The concatenated attention context of each head and the attention
+probabilities (if <code class="xref py py-obj docutils literal"><span class="pre">return_attention</span></code> is set).</p>
 </td>
 </tr>
 </tbody>
@@ -515,6 +518,7 @@ dimension.</li>
     <div class="rst-other-versions">
         <dl>
             <dt>Tags</dt>
+            <dd><a href="../../v1.8.0/package/opennmt.layers.transformer.html">v1.8.0</a></dd>
             <dd><a href="../../v1.7.0/package/opennmt.layers.transformer.html">v1.7.0</a></dd>
             <dd><a href="../../v1.6.0/package/opennmt.layers.transformer.html">v1.6.0</a></dd>
             <dd><a href="opennmt.layers.transformer.html">v1.5.0</a></dd>

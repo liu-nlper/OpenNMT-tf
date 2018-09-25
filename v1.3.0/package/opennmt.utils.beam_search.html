@@ -267,7 +267,7 @@ topk_finished_flags[batch_size, beam_size])</p>
 
 <dl class="function">
 <dt id="opennmt.utils.beam_search.beam_search">
-<code class="descclassname">opennmt.utils.beam_search.</code><code class="descname">beam_search</code><span class="sig-paren">(</span><em>symbols_to_logits_fn</em>, <em>initial_ids</em>, <em>beam_size</em>, <em>decode_length</em>, <em>vocab_size</em>, <em>alpha</em>, <em>states=None</em>, <em>eos_id=1</em>, <em>stop_early=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opennmt/utils/beam_search.html#beam_search"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opennmt.utils.beam_search.beam_search" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">opennmt.utils.beam_search.</code><code class="descname">beam_search</code><span class="sig-paren">(</span><em>symbols_to_logits_fn</em>, <em>initial_ids</em>, <em>beam_size</em>, <em>decode_length</em>, <em>vocab_size</em>, <em>alpha</em>, <em>states=None</em>, <em>eos_id=1</em>, <em>stop_early=True</em>, <em>return_states=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opennmt/utils/beam_search.html#beam_search"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opennmt.utils.beam_search.beam_search" title="Permalink to this definition">¶</a></dt>
 <dd><p>Beam search with length penalties.</p>
 <p>Requires a function that can take the currently decoded symbols and return
 the logits for the next symbol. The implementation is inspired by
@@ -306,14 +306,16 @@ symbols_to_logits_fn</li>
 <li><strong>states</strong> – dict (possibly nested) of decoding states.</li>
 <li><strong>eos_id</strong> – ID for end of sentence.</li>
 <li><strong>stop_early</strong> – a boolean - stop once best sequence is provably determined.</li>
+<li><strong>return_states</strong> – a boolean - return the update states dictionary.</li>
 </ul>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><p>Tuple of
 (decoded beams [batch_size, beam_size, decode_length]</p>
 <blockquote>
-<div><p>decoding probabilities [batch_size, beam_size])</p>
+<div><p>decoding probabilities [batch_size, beam_size]) and the decoding</p>
 </div></blockquote>
+<p>states if <cite>return_states</cite> is True.</p>
 </p>
 </td>
 </tr>
@@ -365,6 +367,7 @@ symbols_to_logits_fn</li>
     <div class="rst-other-versions">
         <dl>
             <dt>Tags</dt>
+            <dd><a href="../../v1.8.0/package/opennmt.utils.beam_search.html">v1.8.0</a></dd>
             <dd><a href="../../v1.7.0/package/opennmt.utils.beam_search.html">v1.7.0</a></dd>
             <dd><a href="../../v1.6.0/package/opennmt.utils.beam_search.html">v1.6.0</a></dd>
             <dd><a href="../../v1.5.0/package/opennmt.utils.beam_search.html">v1.5.0</a></dd>

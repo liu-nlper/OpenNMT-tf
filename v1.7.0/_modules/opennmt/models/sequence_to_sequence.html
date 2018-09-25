@@ -159,6 +159,7 @@
 <span></span><span class="sd">&quot;&quot;&quot;Standard sequence-to-sequence model.&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">import</span> <span class="nn">opennmt.constants</span> <span class="k">as</span> <span class="nn">constants</span>
 <span class="kn">import</span> <span class="nn">opennmt.inputters</span> <span class="k">as</span> <span class="nn">inputters</span>
@@ -233,6 +234,7 @@
                <span class="n">encoder</span><span class="p">,</span>
                <span class="n">decoder</span><span class="p">,</span>
                <span class="n">share_embeddings</span><span class="o">=</span><span class="n">EmbeddingsSharingLevel</span><span class="o">.</span><span class="n">NONE</span><span class="p">,</span>
+               <span class="n">alignment_file_key</span><span class="o">=</span><span class="s2">&quot;train_alignments&quot;</span><span class="p">,</span>
                <span class="n">daisy_chain_variables</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;seq2seq&quot;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Initializes a sequence-to-sequence model.</span>
@@ -248,6 +250,8 @@
 <span class="sd">      share_embeddings: Level of embeddings sharing, see</span>
 <span class="sd">        :class:`opennmt.models.sequence_to_sequence.EmbeddingsSharingLevel`</span>
 <span class="sd">        for possible values.</span>
+<span class="sd">      alignment_file_key: The data configuration key of the training alignment</span>
+<span class="sd">        file to support guided alignment.</span>
 <span class="sd">      daisy_chain_variables: If ``True``, copy variables in a daisy chain</span>
 <span class="sd">        between devices for this model. Not compatible with RNN based models.</span>
 <span class="sd">      name: The name of this model.</span>
@@ -281,7 +285,35 @@
     <span class="bp">self</span><span class="o">.</span><span class="n">share_embeddings</span> <span class="o">=</span> <span class="n">share_embeddings</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">source_inputter</span> <span class="o">=</span> <span class="n">source_inputter</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">target_inputter</span> <span class="o">=</span> <span class="n">target_inputter</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">target_inputter</span><span class="o">.</span><span class="n">add_process_hooks</span><span class="p">([</span><span class="n">shift_target_sequence</span><span class="p">])</span></div>
+    <span class="bp">self</span><span class="o">.</span><span class="n">target_inputter</span><span class="o">.</span><span class="n">add_process_hooks</span><span class="p">([</span><span class="n">shift_target_sequence</span><span class="p">])</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">alignment_file_key</span> <span class="o">=</span> <span class="n">alignment_file_key</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">alignment_file</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+  <span class="k">def</span> <span class="nf">_initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metadata</span><span class="p">):</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">SequenceToSequence</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_initialize</span><span class="p">(</span><span class="n">metadata</span><span class="p">)</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">alignment_file_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">alignment_file_key</span> <span class="ow">in</span> <span class="n">metadata</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">alignment_file</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">alignment_file_key</span><span class="p">]</span>
+      <span class="n">tf</span><span class="o">.</span><span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+          <span class="s2">&quot;Training with guided alignment using alignments from </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">alignment_file</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_augment_parallel_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">process_fn</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="c1"># Possibly add alignments as labels.</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">alignment_file</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">mode</span> <span class="o">!=</span> <span class="n">tf</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">ModeKeys</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">:</span>
+      <span class="k">return</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">process_fn</span>
+
+    <span class="k">def</span> <span class="nf">_inject_alignments</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">alignment_line</span><span class="p">):</span>
+      <span class="n">source</span><span class="p">,</span> <span class="n">target</span> <span class="o">=</span> <span class="n">text</span>
+      <span class="n">features</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">process_fn</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>  <span class="c1"># Default processing.</span>
+      <span class="n">alignments</span> <span class="o">=</span> <span class="n">alignment_matrix_from_pharaoh</span><span class="p">(</span>
+          <span class="n">alignment_line</span><span class="p">,</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_get_features_length</span><span class="p">(</span><span class="n">features</span><span class="p">),</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_get_labels_length</span><span class="p">(</span><span class="n">labels</span><span class="p">))</span>
+      <span class="n">labels</span><span class="p">[</span><span class="s2">&quot;alignment&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">alignments</span>
+      <span class="k">return</span> <span class="n">features</span><span class="p">,</span> <span class="n">labels</span>
+
+    <span class="n">alignment_dataset</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">TextLineDataset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alignment_file</span><span class="p">)</span>
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">zip</span><span class="p">((</span><span class="n">dataset</span><span class="p">,</span> <span class="n">alignment_dataset</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">_inject_alignments</span>
 
   <span class="k">def</span> <span class="nf">_get_input_scope</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">default_name</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">share_embeddings</span> <span class="o">==</span> <span class="n">EmbeddingsSharingLevel</span><span class="o">.</span><span class="n">SOURCE_TARGET_INPUT</span><span class="p">:</span>
@@ -327,7 +359,7 @@
               <span class="n">schedule_type</span><span class="o">=</span><span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;scheduled_sampling_type&quot;</span><span class="p">),</span>
               <span class="n">k</span><span class="o">=</span><span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;scheduled_sampling_k&quot;</span><span class="p">))</span>
 
-        <span class="n">logits</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoder</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span>
+        <span class="n">logits</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">attention</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoder</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span>
             <span class="n">target_inputs</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_get_labels_length</span><span class="p">(</span><span class="n">labels</span><span class="p">),</span>
             <span class="n">vocab_size</span><span class="o">=</span><span class="n">target_vocab_size</span><span class="p">,</span>
@@ -336,9 +368,14 @@
             <span class="n">embedding</span><span class="o">=</span><span class="n">target_embedding_fn</span><span class="p">,</span>
             <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span>
             <span class="n">memory</span><span class="o">=</span><span class="n">encoder_outputs</span><span class="p">,</span>
-            <span class="n">memory_sequence_length</span><span class="o">=</span><span class="n">encoder_sequence_length</span><span class="p">)</span>
+            <span class="n">memory_sequence_length</span><span class="o">=</span><span class="n">encoder_sequence_length</span><span class="p">,</span>
+            <span class="n">return_alignment_history</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;logits&quot;</span><span class="p">:</span> <span class="n">logits</span><span class="p">,</span>
+            <span class="s2">&quot;attention&quot;</span><span class="p">:</span> <span class="n">attention</span>
+        <span class="p">}</span>
     <span class="k">else</span><span class="p">:</span>
-      <span class="n">logits</span> <span class="o">=</span> <span class="kc">None</span>
+      <span class="n">outputs</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">if</span> <span class="n">mode</span> <span class="o">!=</span> <span class="n">tf</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">ModeKeys</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">:</span>
       <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="s2">&quot;decoder&quot;</span><span class="p">,</span> <span class="n">reuse</span><span class="o">=</span><span class="n">labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
@@ -412,16 +449,38 @@
     <span class="k">else</span><span class="p">:</span>
       <span class="n">predictions</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="k">return</span> <span class="n">logits</span><span class="p">,</span> <span class="n">predictions</span>
+    <span class="k">return</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">predictions</span>
 
   <span class="k">def</span> <span class="nf">_compute_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">cross_entropy_sequence_loss</span><span class="p">(</span>
-        <span class="n">outputs</span><span class="p">,</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+      <span class="n">logits</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;logits&quot;</span><span class="p">]</span>
+      <span class="n">attention</span> <span class="o">=</span> <span class="n">outputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;attention&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">logits</span> <span class="o">=</span> <span class="n">outputs</span>
+      <span class="n">attention</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">labels_lengths</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_labels_length</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+    <span class="n">loss</span><span class="p">,</span> <span class="n">loss_normalizer</span><span class="p">,</span> <span class="n">loss_token_normalizer</span> <span class="o">=</span> <span class="n">cross_entropy_sequence_loss</span><span class="p">(</span>
+        <span class="n">logits</span><span class="p">,</span>
         <span class="n">labels</span><span class="p">[</span><span class="s2">&quot;ids_out&quot;</span><span class="p">],</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_get_labels_length</span><span class="p">(</span><span class="n">labels</span><span class="p">),</span>
+        <span class="n">labels_lengths</span><span class="p">,</span>
         <span class="n">label_smoothing</span><span class="o">=</span><span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;label_smoothing&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
         <span class="n">average_in_time</span><span class="o">=</span><span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;average_loss_in_time&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
         <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="n">tf</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">ModeKeys</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">:</span>
+      <span class="n">gold_alignments</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;alignment&quot;</span><span class="p">)</span>
+      <span class="n">guided_alignment_type</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;guided_alignment_type&quot;</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">gold_alignments</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">guided_alignment_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">attention</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+          <span class="n">tf</span><span class="o">.</span><span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;This model did not return attention vectors; &quot;</span>
+                             <span class="s2">&quot;guided alignment will not be applied&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="n">loss</span> <span class="o">+=</span> <span class="n">guided_alignment_cost</span><span class="p">(</span>
+              <span class="n">attention</span><span class="p">,</span>
+              <span class="n">gold_alignments</span><span class="p">,</span>
+              <span class="n">labels_lengths</span><span class="p">,</span>
+              <span class="n">guided_alignment_type</span><span class="p">,</span>
+              <span class="n">guided_alignment_weight</span><span class="o">=</span><span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;guided_alignment_weight&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">loss</span><span class="p">,</span> <span class="n">loss_normalizer</span><span class="p">,</span> <span class="n">loss_token_normalizer</span>
 
 <div class="viewcode-block" id="SequenceToSequence.print_prediction"><a class="viewcode-back" href="../../../package/opennmt.models.sequence_to_sequence.html#opennmt.models.sequence_to_sequence.SequenceToSequence.print_prediction">[docs]</a>  <span class="k">def</span> <span class="nf">print_prediction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prediction</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="n">n_best</span> <span class="o">=</span> <span class="n">params</span> <span class="ow">and</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;n_best&quot;</span><span class="p">)</span>
@@ -431,10 +490,81 @@
       <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;n_best cannot be greater than beam_width&quot;</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_best</span><span class="p">):</span>
-      <span class="n">tokens</span> <span class="o">=</span> <span class="n">prediction</span><span class="p">[</span><span class="s2">&quot;tokens&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">][:</span><span class="n">prediction</span><span class="p">[</span><span class="s2">&quot;length&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="c1"># Ignore &lt;/s&gt;.</span>
+      <span class="n">target_length</span> <span class="o">=</span> <span class="n">prediction</span><span class="p">[</span><span class="s2">&quot;length&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>  <span class="c1"># Ignore &lt;/s&gt;.</span>
+      <span class="n">tokens</span> <span class="o">=</span> <span class="n">prediction</span><span class="p">[</span><span class="s2">&quot;tokens&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">][:</span><span class="n">target_length</span><span class="p">]</span>
       <span class="n">sentence</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_inputter</span><span class="o">.</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">detokenize</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;with_scores&quot;</span><span class="p">):</span>
+        <span class="n">sentence</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%f</span><span class="s2"> ||| </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="n">prediction</span><span class="p">[</span><span class="s2">&quot;log_probs&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">/</span> <span class="n">prediction</span><span class="p">[</span><span class="s2">&quot;length&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="n">sentence</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;with_alignments&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;hard&quot;</span><span class="p">:</span>
+        <span class="n">source_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">prediction</span><span class="p">[</span><span class="s2">&quot;alignment&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">][:</span><span class="n">target_length</span><span class="p">],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">target_indices</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">target_length</span><span class="p">)</span>
+        <span class="n">pairs</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2">-</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">tgt</span><span class="p">)</span> <span class="k">for</span> <span class="n">src</span><span class="p">,</span> <span class="n">tgt</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">source_indices</span><span class="p">,</span> <span class="n">target_indices</span><span class="p">))</span>
+        <span class="n">sentence</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> ||| </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sentence</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pairs</span><span class="p">))</span>
       <span class="n">print_bytes</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">compat</span><span class="o">.</span><span class="n">as_bytes</span><span class="p">(</span><span class="n">sentence</span><span class="p">),</span> <span class="n">stream</span><span class="o">=</span><span class="n">stream</span><span class="p">)</span></div></div>
 
+
+<div class="viewcode-block" id="alignment_matrix_from_pharaoh"><a class="viewcode-back" href="../../../package/opennmt.models.sequence_to_sequence.html#opennmt.models.sequence_to_sequence.alignment_matrix_from_pharaoh">[docs]</a><span class="k">def</span> <span class="nf">alignment_matrix_from_pharaoh</span><span class="p">(</span><span class="n">alignment_line</span><span class="p">,</span>
+                                  <span class="n">source_length</span><span class="p">,</span>
+                                  <span class="n">target_length</span><span class="p">,</span>
+                                  <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Parse Pharaoh alignments into an alignment matrix.</span>
+
+<span class="sd">  Args:</span>
+<span class="sd">    alignment_line: A string ``tf.Tensor`` in the Pharaoh format.</span>
+<span class="sd">    source_length: The length of the source sentence.</span>
+<span class="sd">    target_length The length of the target sentence.</span>
+<span class="sd">    dtype: The output matrix dtype. Defaults to ``tf.float32`` for convenience</span>
+<span class="sd">      when computing the guided alignment loss.</span>
+
+<span class="sd">  Returns:</span>
+<span class="sd">    The alignment matrix as a 2-D ``tf.Tensor`` of type :obj:`dtype` and shape</span>
+<span class="sd">    ``[target_length, source_length]``, where ``[i, j] = 1`` if the ``i`` th</span>
+<span class="sd">    target word is aligned with the ``j`` th source word.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">align_pairs_str</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">string_split</span><span class="p">([</span><span class="n">alignment_line</span><span class="p">],</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot; &quot;</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+  <span class="n">align_pairs_flat_str</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">string_split</span><span class="p">(</span><span class="n">align_pairs_str</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;-&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+  <span class="n">align_pairs_flat</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">string_to_number</span><span class="p">(</span><span class="n">align_pairs_flat_str</span><span class="p">,</span> <span class="n">out_type</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+  <span class="n">sparse_indices</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">align_pairs_flat</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+  <span class="n">sparse_values</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">sparse_indices</span><span class="p">)[</span><span class="mi">0</span><span class="p">]])</span>
+  <span class="n">alignment_matrix</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">sparse_to_dense</span><span class="p">(</span>
+      <span class="n">sparse_indices</span><span class="p">,</span>
+      <span class="p">[</span><span class="n">source_length</span><span class="p">,</span> <span class="n">target_length</span><span class="p">],</span>
+      <span class="n">sparse_values</span><span class="p">,</span>
+      <span class="n">validate_indices</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+  <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">alignment_matrix</span><span class="p">),</span> <span class="n">dtype</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="guided_alignment_cost"><a class="viewcode-back" href="../../../package/opennmt.models.sequence_to_sequence.html#opennmt.models.sequence_to_sequence.guided_alignment_cost">[docs]</a><span class="k">def</span> <span class="nf">guided_alignment_cost</span><span class="p">(</span><span class="n">attention_probs</span><span class="p">,</span>
+                          <span class="n">gold_alignment</span><span class="p">,</span>
+                          <span class="n">sequence_length</span><span class="p">,</span>
+                          <span class="n">guided_alignment_type</span><span class="p">,</span>
+                          <span class="n">guided_alignment_weight</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Computes the guided alignment cost.</span>
+
+<span class="sd">  Args:</span>
+<span class="sd">    attention_probs: The attention probabilities, a float ``tf.Tensor`` of shape</span>
+<span class="sd">      :math:`[B, T_t, T_s]`.</span>
+<span class="sd">    gold_alignment: The true alignment matrix, a float ``tf.Tensor`` of shape</span>
+<span class="sd">      :math:`[B, T_t, T_s]`.</span>
+<span class="sd">    sequence_length: The length of each sequence.</span>
+<span class="sd">    guided_alignment_type: The type of guided alignment cost function to compute</span>
+<span class="sd">      (can be: ce, mse).</span>
+<span class="sd">    guided_alignment_weight: The weight applied to the guided alignment cost.</span>
+
+<span class="sd">  Returns:</span>
+<span class="sd">    The guided alignment cost.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">weights</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">sequence_mask</span><span class="p">(</span>
+      <span class="n">sequence_length</span><span class="p">,</span> <span class="n">maxlen</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">attention_probs</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">attention_probs</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+  <span class="k">if</span> <span class="n">guided_alignment_type</span> <span class="o">==</span> <span class="s2">&quot;ce&quot;</span><span class="p">:</span>
+    <span class="n">cross_entropy</span> <span class="o">=</span> <span class="o">-</span><span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">attention_probs</span> <span class="o">+</span> <span class="mf">1e-6</span><span class="p">)</span> <span class="o">*</span> <span class="n">gold_alignment</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="n">cross_entropy</span> <span class="o">*</span> <span class="n">weights</span><span class="p">)</span>
+  <span class="k">elif</span> <span class="n">guided_alignment_type</span> <span class="o">==</span> <span class="s2">&quot;mse&quot;</span><span class="p">:</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">mean_squared_error</span><span class="p">(</span>
+        <span class="n">gold_alignment</span><span class="p">,</span> <span class="n">attention_probs</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+  <span class="k">else</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;invalid guided_alignment_type: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">guided_alignment_type</span><span class="p">)</span>
+  <span class="k">return</span> <span class="n">guided_alignment_weight</span> <span class="o">*</span> <span class="n">loss</span></div>
 
 <div class="viewcode-block" id="align_tokens_from_attention"><a class="viewcode-back" href="../../../package/opennmt.models.sequence_to_sequence.html#opennmt.models.sequence_to_sequence.align_tokens_from_attention">[docs]</a><span class="k">def</span> <span class="nf">align_tokens_from_attention</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">attention</span><span class="p">):</span>
   <span class="sd">&quot;&quot;&quot;Returns aligned tokens from the attention.</span>
@@ -515,6 +645,7 @@
     <div class="rst-other-versions">
         <dl>
             <dt>Tags</dt>
+            <dd><a href="../../../../v1.8.0/index.html">v1.8.0</a></dd>
             <dd><a href="sequence_to_sequence.html">v1.7.0</a></dd>
             <dd><a href="../../../../v1.6.0/index.html">v1.6.0</a></dd>
             <dd><a href="../../../../v1.5.0/index.html">v1.5.0</a></dd>
